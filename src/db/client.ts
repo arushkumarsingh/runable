@@ -13,7 +13,7 @@ export function initDB() {
   logger.info({ path: config.dbPath }, "Initializing database");
   
   db = new Database(config.dbPath);
-  db.pragma("journal_mode = WAL");
+  db.exec("PRAGMA journal_mode = WAL");
   
   // Run schema creation
   db.exec(SCHEMA_SQL);
@@ -25,7 +25,7 @@ export function initDB() {
 /**
  * Get the database instance
  */
-export function getDB(): Database.Database {
+export function getDB(): Database {
   if (!db) {
     throw new Error("Database not initialized. Call initDB() first.");
   }

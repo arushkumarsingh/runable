@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { generateText } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 import { config } from "./src/config/env.js";

@@ -1,4 +1,4 @@
-import { tool } from "ai";
+import { tool, jsonSchema } from "ai";
 import { z } from "zod";
 import { exec } from "../docker/manager.js";
 import { logger } from "../utils/logger.js";
@@ -15,11 +15,21 @@ import { join } from "path";
  */
 export const runShellTool = tool({
   description: "Execute a shell command in a sandboxed Docker container. Use this to run code, install packages, or perform system operations.",
-  parameters: z.object({
-    command: z.string().describe("The shell command to execute"),
-    timeoutMs: z.number().optional().default(30000).describe("Timeout in milliseconds (default: 30000)"),
+  inputSchema: jsonSchema({
+    type: "object",
+    properties: {
+      command: {
+        type: "string",
+        description: "The shell command to execute",
+      },
+      timeoutMs: {
+        type: "number",
+        description: "Timeout in milliseconds (default: 30000)",
+      },
+    },
+    required: ["command"],
   }),
-  execute: async ({ command, timeoutMs }: { command: string; timeoutMs: number }) => {
+  execute: async ({ command, timeoutMs = 30000 }: { command: string; timeoutMs?: number }) => {
     logger.info({ command, timeoutMs }, "Executing shell command");
 
     try {
@@ -55,10 +65,17 @@ export const runShellTool = tool({
  */
 export const readFileTool = tool({
   description: "Read the contents of a file from the workspace. Returns the file content as a string.",
-  parameters: z.object({
-    path: z.string().describe("Relative path to the file in the workspace"),
+  inputSchema: jsonSchema({
+    type: "object",
+    properties: {
+      path: {
+        type: "string",
+        description: "Relative path to the file in the workspace",
+      },
+    },
+    required: ["path"],
   }),
-  execute: async ({ path }) => {
+  execute: async ({ path }: { path: string }) => {
     logger.info({ path }, "Reading file");
 
     try {
@@ -98,11 +115,21 @@ export const readFileTool = tool({
  */
 export const writeFileTool = tool({
   description: "Write content to a file in the workspace. Creates the file if it doesn't exist, overwrites if it does.",
-  parameters: z.object({
-    path: z.string().describe("Relative path to the file in the workspace"),
-    content: z.string().describe("Content to write to the file"),
+  inputSchema: jsonSchema({
+    type: "object",
+    properties: {
+      path: {
+        type: "string",
+        description: "Relative path to the file in the workspace",
+      },
+      content: {
+        type: "string",
+        description: "Content to write to the file",
+      },
+    },
+    required: ["path", "content"],
   }),
-  execute: async ({ path, content }) => {
+  execute: async ({ path, content }: { path: string; content: string }) => {
     logger.info({ path, contentLength: content.length }, "Writing file");
 
     try {

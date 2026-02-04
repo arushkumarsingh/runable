@@ -7,9 +7,10 @@
     "start:bun": "bun run index.ts"
   },
   "dependencies": {
+    "@ai-sdk/gateway": "^3.0.32",
     "@types/better-sqlite3": "^7.6.13",
     "@types/dockerode": "^4.0.1",
-    "ai": "^6.0.0",
+    "ai": "^6.0.69",
     "better-sqlite3": "^12.6.2",
     "dockerode": "^4.0.9",
     "dotenv": "^17.2.3",

@@ -6,6 +6,7 @@ import { logger } from "../utils/logger.js";
  * Docker manager for sandbox execution with crash recovery
  */
 
+// Windows Docker Desktop uses named pipes
 const docker = new Docker();
 
 // Container name for persistence
