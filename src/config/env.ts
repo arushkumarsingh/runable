@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { logger } from "../utils/logger.js";
-import { join } from "path";
 import { mkdirSync } from "fs";
 
 const envSchema = z.object({
@@ -64,7 +63,8 @@ export const config = {
   },
 } as const;
 
-mkdirSync(join(process.cwd(), env.DOCKER_WORKDIR), { recursive: true });
+// Ensure workspace directory exists (process.cwd() is mounted to Docker workdir)
+mkdirSync(process.cwd(), { recursive: true });
 
 // Type export for the config object
 export type Config = typeof config;

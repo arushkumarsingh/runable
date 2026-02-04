@@ -4,6 +4,7 @@ import { createGateway } from "@ai-sdk/gateway";
 import { config } from "./src/config/env.js";
 import { logger } from "./src/utils/logger.js";
 import { initDB, runMigrations } from "./src/db/index.js";
+import { getAllSessions } from "./src/db/client.js";
 import { Session } from "./src/agent/session.js";
 import { tools } from "./src/agent/tools.js";
 import { extractUsage } from "./src/agent/tokenCounter.js";
@@ -81,7 +82,7 @@ async function runAgent(session: Session, userMessage: string) {
 /**
  * CLI loop for interactive usage
  */
-async function cliLoop() {
+async function cliLoop(resume: boolean = false) {
   logger.info("Starting CLI loop");
 
   const rl = readline.createInterface({
@@ -89,8 +90,26 @@ async function cliLoop() {
     output: process.stdout,
   });
 
-  // Load or create session
-  const session = await Session.loadOrCreate();
+  // Load session based on resume flag
+  let session: Session;
+  if (resume) {
+    logger.info("Resume flag detected, loading most recent session");
+    const recentSessions = getAllSessions(1);
+    logger.debug({ sessionCount: recentSessions.length }, "Found sessions in database");
+    if (recentSessions.length > 0) {
+      logger.info({ sessionId: recentSessions[0].id }, "Loading session");
+      session = await Session.loadOrCreate(recentSessions[0].id);
+      logger.info({ sessionId: session.getId() }, "Resumed existing session");
+    } else {
+      logger.warn("No previous session found, creating new session");
+      session = await Session.loadOrCreate();
+      logger.info({ sessionId: session.getId() }, "Created new session");
+    }
+  } else {
+    session = await Session.loadOrCreate();
+    logger.info({ sessionId: session.getId() }, "Created new session");
+  }
+  
   logger.info({ sessionId: session.getId() }, "Session ready");
 
   console.log("\n🤖 Context-Compacting Coding Agent");
@@ -146,7 +165,7 @@ async function cliLoop() {
 async function runDemo() {
   logger.info("Running demo task");
 
-  // Load or create session
+  // Create new session for demo
   const session = await Session.loadOrCreate();
 
   console.log("\n🤖 Running Demo Task");
@@ -178,14 +197,17 @@ async function main() {
   logger.info("Ensuring Docker container is ready");
   await ensureContainer();
 
-  // Check command line args
+  // Parse command line args
   const args = process.argv.slice(2);
-  const mode = args[0] || "cli";
+  logger.info({ args, fullArgv: process.argv }, "Command line arguments received");
+  const resume = args.includes("--resume");
+  const mode = args.find(arg => arg !== "--resume") || "cli";
+  logger.info({ resume, mode }, "Parsed arguments");
 
   if (mode === "demo") {
     await runDemo();
   } else {
-    await cliLoop();
+    await cliLoop(resume);
   }
 
   logger.info("Agent shutdown complete");

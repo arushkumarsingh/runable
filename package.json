@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "tsx index.ts",
-    "start:bun": "bun run index.ts"
+    "start:bun": "bun run index.ts",
+    "resume": "tsx index.ts --resume",
+    "resume:bun": "bun run index.ts --resume"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.32",
