@@ -9,6 +9,7 @@ const envSchema = z.object({
   COMPACT_AT_PERCENT: z.coerce.number().min(0).max(100).default(75),
   DOCKER_IMAGE: z.string().default("node:20-alpine"),
   DOCKER_WORKDIR: z.string().default("/workspace"),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
 /**
@@ -24,6 +25,7 @@ function loadEnv() {
     COMPACT_AT_PERCENT: process.env.COMPACT_AT_PERCENT,
     DOCKER_IMAGE: process.env.DOCKER_IMAGE,
     DOCKER_WORKDIR: process.env.DOCKER_WORKDIR,
+    LOG_LEVEL: process.env.LOG_LEVEL,
   };
 
   const result = envSchema.safeParse(rawEnv);
@@ -39,6 +41,7 @@ function loadEnv() {
 const env = loadEnv();
 
 export const config = {
+  logLevel: env.LOG_LEVEL,
   apiKey: env.VERCEL_GATEWAY_KEY,
   model: env.MODEL,
   dbPath: env.DB_PATH,
