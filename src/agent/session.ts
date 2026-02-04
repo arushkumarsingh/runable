@@ -201,9 +201,17 @@ export class Session {
     this.summary = result.newSummary;
 
     // Delete old messages (keep recent ones)
-    if (result.keepMessagesFromIndex > 0) {
+    if (result.keepMessagesFromIndex > 0 && result.keepMessagesFromIndex < dbMessages.length) {
       const firstMessageToKeep = dbMessages[result.keepMessagesFromIndex];
       deleteMessagesBeforeId(this.sessionId, firstMessageToKeep.id);
+    } else if (result.keepMessagesFromIndex >= dbMessages.length) {
+      // All messages were compacted, delete all messages
+      logger.info({ sessionId: this.sessionId }, "All messages compacted, clearing message history");
+      // Delete all messages by using the last message ID + 1 (or delete all)
+      if (dbMessages.length > 0) {
+        const lastMessage = dbMessages[dbMessages.length - 1];
+        deleteMessagesBeforeId(this.sessionId, lastMessage.id + 1);
+      }
     }
 
     // Recalculate token count
