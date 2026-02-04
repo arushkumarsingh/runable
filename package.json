@@ -6,7 +6,9 @@
     "start": "bun run index.ts"
   },
   "dependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "ai": "^6.0.0",
+    "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.38.0",
     "pino": "^10.3.0",
     "pino-pretty": "^13.1.3",
