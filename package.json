@@ -5,7 +5,8 @@
   "scripts": {
     "start": "tsx index.ts",
     "start:new": "tsx index.ts --new",
-    "start:bun": "bun run index.ts"
+    "start:bun": "bun run index.ts",
+    "test": "tsx tests/stress-test.ts"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.32",

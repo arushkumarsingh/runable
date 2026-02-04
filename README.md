@@ -8,6 +8,32 @@ An intelligent coding agent that maintains long conversations without hitting co
 
 **Watch the demo:** [https://youtu.be/fmOVTugQTq4](https://youtu.be/fmOVTugQTq4)
 
+---
+
+## 🔥 The Stress Test Demo
+
+**Want to see the scary parts actually work?** Run ONE command:
+
+```bash
+npm run test
+```
+
+This automatically:
+1. ✅ Starts a long multi-step task
+2. ✅ Forces context compaction mid-conversation
+3. ✅ **Kills the Docker container** (literally runs `docker kill` - not simulated!)
+4. ✅ Auto-recovers and recreates container
+5. ✅ Resumes the session from database
+6. ✅ Completes the task successfully
+7. ✅ Prints final results with verification
+
+**Translation:** *"I didn't just build it — I tested the parts that actually break."*
+
+**Note:** The test actually kills the running Docker container and proves recovery works. Make sure you've built the Docker image first:
+```bash
+docker build -f src/docker/sandbox.Dockerfile -t runable-sandbox:latest .
+```
+
 ## 🌟 Features
 
 - **Automatic Context Compaction**: Intelligently summarizes old messages when approaching token limits
@@ -96,19 +122,41 @@ runable/
 │   └── utils/
 │       └── logger.ts          # Logging utility
 ├── tests/
-│   └── test-all.ts            # Test suite
+│   ├── stress-test.ts         # Automated stress test (npm run test)
+│   └── test-all.ts            # Unit tests
 └── TESTING.md                 # Comprehensive testing guide
 ```
 
 ## 🧪 Testing
 
-```bash
-# Run automated tests
-npm run test
+### Automated Stress Test (Recommended!)
 
-# Manual testing
-npm start
+The stress test automatically demonstrates all critical features:
+
+```bash
+npm run test
 ```
+
+This runs a comprehensive scenario that:
+- Creates multiple files across several conversation turns
+- Triggers automatic compaction when approaching token limits
+- Kills the Docker container mid-conversation
+- Proves the system auto-recovers
+- Resumes the session from SQLite
+- Verifies all data persisted correctly
+
+**Perfect for quickly validating the entire system works.**
+
+### Manual Testing
+
+```bash
+# Interactive session selector
+npm start
+
+# Create new session
+npm run start:new
+```
+
 
 ## 🛠️ Key Technologies
 

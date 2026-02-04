@@ -66,7 +66,9 @@ async function runAgent(session: Session, userMessage: string) {
   logger.info({ usage }, "Generation completed");
 
   // Add assistant response to session
-  session.addAssistantMessage(result.text, usage.totalTokens);
+  // Handle responses with tool calls but no text content
+  const responseText = result.text || "(Used tools to complete the task)";
+  session.addAssistantMessage(responseText, usage.totalTokens);
 
   // Update token count
   session.updateTokenCount(usage.inputTokens, usage.outputTokens);
@@ -181,7 +183,8 @@ async function cliLoop(skipSelector: boolean = false) {
     try {
       const result = await runAgent(session, userInput);
 
-      console.log("\nAssistant:", result.text);
+      const displayText = result.text || "(Used tools to complete the task)";
+      console.log("\nAssistant:", displayText);
 
       // Show tool calls if any
       if (result.toolCalls && result.toolCalls.length > 0) {
