@@ -18,13 +18,6 @@ Requires Docker to be running.
   npm run start
   ```
 
-- **Resume previous session**:
-  ```bash
-  npm run resume
-  # or
-  npm run start -- --resume
-  # Note: The double dash (--) is required to pass arguments through npm
-  ```
 
 - **Run demo**:
   ```bash

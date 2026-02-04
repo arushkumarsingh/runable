@@ -10,6 +10,7 @@ import { tools } from "./src/agent/tools.js";
 import { extractUsage } from "./src/agent/tokenCounter.js";
 import { ensureContainer } from "./src/docker/manager.js";
 import * as readline from "readline/promises";
+import inquirer from "inquirer";
 
 /**
  * Main entry point for the context-compacting coding agent
@@ -80,34 +81,73 @@ async function runAgent(session: Session, userMessage: string) {
 }
 
 /**
+ * Show interactive session selector
+ */
+async function selectSession(): Promise<string | null> {
+  const sessions = getAllSessions(10);
+  
+  const choices = [
+    { name: "🆕 Start new session", value: "new" },
+    { name: "─".repeat(50), value: "separator", disabled: true },
+  ];
+  
+  if (sessions.length > 0) {
+    for (const session of sessions) {
+      const date = new Date(session.updated_at * 1000).toLocaleString();
+      const hasMessages = session.summary_text ? "📝" : "💬";
+      const preview = session.summary_text 
+        ? session.summary_text.substring(0, 60) + "..." 
+        : "Empty session";
+      
+      choices.push({
+        name: `${hasMessages} ${session.id.substring(0, 8)}... (${date}) - ${preview}`,
+        value: session.id,
+      });
+    }
+  } else {
+    choices.push({
+      name: "No previous sessions found",
+      value: "separator",
+      disabled: true,
+    });
+  }
+  
+  const answer = await inquirer.prompt([
+    {
+      type: "list",
+      name: "sessionId",
+      message: "Select a session:",
+      choices,
+      loop: false,
+    },
+  ]);
+  
+  return answer.sessionId === "new" ? null : answer.sessionId;
+}
+
+/**
  * CLI loop for interactive usage
  */
-async function cliLoop(resume: boolean = false) {
+async function cliLoop(skipSelector: boolean = false) {
   logger.info("Starting CLI loop");
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  // Load session based on resume flag
+  // Load session - show selector by default unless skipSelector is true
   let session: Session;
-  if (resume) {
-    logger.info("Resume flag detected, loading most recent session");
-    const recentSessions = getAllSessions(1);
-    logger.debug({ sessionCount: recentSessions.length }, "Found sessions in database");
-    if (recentSessions.length > 0) {
-      logger.info({ sessionId: recentSessions[0].id }, "Loading session");
-      session = await Session.loadOrCreate(recentSessions[0].id);
-      logger.info({ sessionId: session.getId() }, "Resumed existing session");
+  
+  if (skipSelector) {
+    // Skip selector and create new session directly
+    session = await Session.loadOrCreate();
+    logger.info({ sessionId: session.getId() }, "Created new session");
+  } else {
+    // Show interactive session selector (default behavior)
+    const selectedSessionId = await selectSession();
+    if (selectedSessionId) {
+      session = await Session.loadOrCreate(selectedSessionId);
+      logger.info({ sessionId: session.getId() }, "Loaded selected session");
     } else {
-      logger.warn("No previous session found, creating new session");
       session = await Session.loadOrCreate();
       logger.info({ sessionId: session.getId() }, "Created new session");
     }
-  } else {
-    session = await Session.loadOrCreate();
-    logger.info({ sessionId: session.getId() }, "Created new session");
   }
   
   logger.info({ sessionId: session.getId() }, "Session ready");
@@ -119,6 +159,12 @@ async function cliLoop(resume: boolean = false) {
   console.log(`Max Tokens: ${config.maxTokens.toLocaleString()}`);
   console.log(`Compact At: ${config.compactAtTokens.toLocaleString()} (${config.compactAtPercent}%)`);
   console.log("\nType your message and press Enter. Type 'exit' to quit.\n");
+
+  // Create readline interface after session selection to avoid conflicts
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
   while (true) {
     const userInput = await rl.question("You: ");
@@ -200,14 +246,14 @@ async function main() {
   // Parse command line args
   const args = process.argv.slice(2);
   logger.info({ args, fullArgv: process.argv }, "Command line arguments received");
-  const resume = args.includes("--resume");
-  const mode = args.find(arg => arg !== "--resume") || "cli";
-  logger.info({ resume, mode }, "Parsed arguments");
+  const skipSelector = args.includes("--new") || args.includes("-n");
+  const mode = args.find(arg => !arg.startsWith("--") && !arg.startsWith("-")) || "cli";
+  logger.info({ skipSelector, mode }, "Parsed arguments");
 
   if (mode === "demo") {
     await runDemo();
   } else {
-    await cliLoop(resume);
+    await cliLoop(skipSelector);
   }
 
   logger.info("Agent shutdown complete");
