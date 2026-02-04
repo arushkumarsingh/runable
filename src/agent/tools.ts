@@ -1,9 +1,9 @@
 import { tool, jsonSchema } from "ai";
-import { z } from "zod";
 import { exec } from "../docker/manager.js";
 import { logger } from "../utils/logger.js";
 import { readFileSync, writeFileSync, existsSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { config } from "../config/env.js";
 
 /**
  * Tool definitions for the coding agent
@@ -79,7 +79,7 @@ export const readFileTool = tool({
     logger.info({ path }, "Reading file");
 
     try {
-      const fullPath = join(process.cwd(), path);
+      const fullPath = join(process.cwd(), config.docker.workdir, path);
       
       if (!existsSync(fullPath)) {
         logger.warn({ path, fullPath }, "File not found");
@@ -133,8 +133,8 @@ export const writeFileTool = tool({
     logger.info({ path, contentLength: content.length }, "Writing file");
 
     try {
-      const fullPath = join(process.cwd(), path);
-      
+      const fullPath = join(process.cwd(), config.docker.workdir, path);
+
       writeFileSync(fullPath, content, "utf-8");
       
       logger.info({ path }, "File written successfully");

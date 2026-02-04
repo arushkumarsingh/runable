@@ -17,10 +17,10 @@ const gateway = createGateway({
 const model = gateway(config.model);
 
 // Number of recent messages to keep verbatim
-const KEEP_RECENT_MESSAGES = 20;
+const KEEP_RECENT_MESSAGES = config.keepRecentMessages;
 
 // Max length for summary to prevent infinite growth
-const MAX_SUMMARY_LENGTH = 8000;
+const MAX_SUMMARY_LENGTH = config.maxSummaryLength;
 
 interface CompactionInput {
   existingSummary?: string;

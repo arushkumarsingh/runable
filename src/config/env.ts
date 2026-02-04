@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { logger } from "../utils/logger.js";
+import { join } from "path";
+import { mkdirSync } from "fs";
 
 const envSchema = z.object({
   VERCEL_GATEWAY_KEY: z.string().min(1, "VERCEL_GATEWAY_KEY is required"),
   DB_PATH: z.string().default("./runable.sqlite"),
   MODEL: z.string().default("anthropic/claude-sonnet-4.5"),
   MAX_TOKENS: z.coerce.number().default(200_000),
+  MAX_SUMMARY_LENGTH: z.coerce.number().default(8000),
+  KEEP_RECENT_MESSAGES: z.coerce.number().default(20),
   COMPACT_AT_PERCENT: z.coerce.number().min(0).max(100).default(75),
   DOCKER_IMAGE: z.string().default("node:20-alpine"),
   DOCKER_WORKDIR: z.string().default("/workspace"),
@@ -22,6 +26,8 @@ function loadEnv() {
     DB_PATH: process.env.DB_PATH,
     MODEL: process.env.MODEL,
     MAX_TOKENS: process.env.MAX_TOKENS,
+    MAX_SUMMARY_LENGTH: process.env.MAX_SUMMARY_LENGTH,
+    KEEP_RECENT_MESSAGES: process.env.KEEP_RECENT_MESSAGES,
     COMPACT_AT_PERCENT: process.env.COMPACT_AT_PERCENT,
     DOCKER_IMAGE: process.env.DOCKER_IMAGE,
     DOCKER_WORKDIR: process.env.DOCKER_WORKDIR,
@@ -46,6 +52,8 @@ export const config = {
   model: env.MODEL,
   dbPath: env.DB_PATH,
   maxTokens: env.MAX_TOKENS,
+  maxSummaryLength: env.MAX_SUMMARY_LENGTH,
+  keepRecentMessages: env.KEEP_RECENT_MESSAGES,
   compactAtTokens: Math.floor(env.MAX_TOKENS * (env.COMPACT_AT_PERCENT / 100)),
   compactAtPercent: env.COMPACT_AT_PERCENT,
 
@@ -55,6 +63,8 @@ export const config = {
     workdir: env.DOCKER_WORKDIR,
   },
 } as const;
+
+mkdirSync(join(process.cwd(), env.DOCKER_WORKDIR), { recursive: true });
 
 // Type export for the config object
 export type Config = typeof config;
