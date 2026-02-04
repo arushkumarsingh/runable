@@ -8,5 +8,5 @@
     "esModuleInterop": true,
     "types": ["bun-types"]
   },
-  "include": ["*.ts"]
+  "include": ["*.ts", "src/index.ts"]
 }
